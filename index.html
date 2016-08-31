@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Parser by YOTOV-LIMITED</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">Parser</h1>
+      <h2 class="project-tagline">Browser sniffing gone too far — A useragent parser library for PHP</h2>
+      <a href="https://github.com/YOTOV-LIMITED/Parser" class="btn">View on GitHub</a>
+      <a href="https://github.com/YOTOV-LIMITED/Parser/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/YOTOV-LIMITED/Parser/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <p><img src="https://api.whichbrowser.net/whichbrowser.svg" width="400"></p>
+
+<p>This is an extremely complicated and almost completely useless browser sniffing library written in PHP. Useless because you shouldn't use browser sniffing. So stop right now and go read something about feature detecting instead. I'm serious. Go away. You'll thank me later.</p>
+
+<p><a href="https://travis-ci.org/WhichBrowser/Parser"><img src="https://travis-ci.org/WhichBrowser/Parser.svg?branch=master" alt="Build Status"></a>
+<a href="https://coveralls.io/github/WhichBrowser/Parser?branch=master"><img src="https://coveralls.io/repos/WhichBrowser/Parser/badge.svg?branch=master&amp;service=github" alt="Coverage Status"></a>
+<a href="https://packagist.org/packages/whichbrowser/parser"><img src="https://poser.pugx.org/whichbrowser/parser/license" alt="License"></a>
+<a href="https://packagist.org/packages/whichbrowser/parser"><img src="https://poser.pugx.org/whichbrowser/parser/v/stable" alt="Latest Stable Version"></a></p>
+
+<p><a href="https://twitter.com/whichbrowserlib"><img src="https://img.shields.io/twitter/follow/whichbrowserlib.svg?style=social" alt="Twitter Follow"></a></p>
+
+<p>If you are looking for the JavaScript API for WhichBrowser, please go to the <a href="https://github.com/WhichBrowser/Server">WhichBrowser/Server</a> project.</p>
+
+<hr>
+
+<p><strong>But why <em>almost completely useless</em> and not completely useless?</strong><br>
+Well, there is always an exception to the rule. There are valid reasons to do browser sniffing: to improve the user experience or to gather intelligence about which browsers are used on your website. My website is html5test.com and I wanted to know which score belongs to which browser. And to do that you need a browser sniffing library.</p>
+
+<p><strong>Why is it extremely complicated?</strong><br>
+Because everybody lies. Seriously, there is not a single browser that is completely truthful. Almost all browsers say they are Netscape 5 and almost all WebKit browsers say they are based on Gecko. Even Internet Explorer 11 now no longer claims to be IE at all, but instead an unnamed browser that is like Gecko. And it gets worse. That is why it is complicated.</p>
+
+<p><strong>What kind of information does it give?</strong>
+You get a nice object which has information about the browser, rendering engine, os and device. It gives you names and versions and even device manufacturer and model. And WhichBrowser is pretty tenacious. It gives you info that others don't. For example:</p>
+
+<pre><code>JUC (Linux; U; 2.3.6; zh-cn; GT-I8150; 480*800) UCWEB8.7.4.225/145/800  
+UC Browser 8.7 on a Samsung Galaxy W running Android 2.3.6
+</code></pre>
+
+<p>Android is never mentioned</p>
+
+<pre><code>Mozilla/5.0 (Series40; Nokia501/10.0.2; Profile/MIDP-2.1 Configuration/CLDC-1.1) Gecko/20100401 S40OviBrowser/3.0.0.0.73  
+Nokia Xpress 3.0.0 on a Nokia Asha 501 running Nokia Asha Platform
+</code></pre>
+
+<p>Despite the useragent header claiming to be a Series40 device, we know it's actually running the Asha Platform and we also know that OviBrowser has been renamed to Nokia Xpress.</p>
+
+<pre><code>Opera/9.80 (X11; Linux zvav; U; zh) Presto/2.8.119 Version/11.10  
+Opera Mini on a Nokia 5230 running Series60 5.0
+</code></pre>
+
+<p>The useragent header looks like Opera 11.10 on Linux, but we know it's Opera Mini. We can even figure out the real operating system and device model from other headers.</p>
+
+<h2>
+<a id="requirements" class="anchor" href="#requirements" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Requirements</h2>
+
+<p>WhichBrowser requires with PHP 5.4 or higher and supports PHP 7 and HHVM. WhichBrowser is compatible with the PSR-4 autoloading standard and follows PSR-1 and PSR-2 coding style.</p>
+
+<h2>
+<a id="how-to-install-it" class="anchor" href="#how-to-install-it" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>How to install it</h2>
+
+<p>You can install WhichBrowser by using Composer - the standard package manager for PHP. The package is called <code>whichbrowser/parser</code>.</p>
+
+<pre><code>composer require whichbrowser/parser
+</code></pre>
+
+<p>You can easily update WhichBrowser by running a simple command.</p>
+
+<pre><code>composer update whichbrowser/parser
+</code></pre>
+
+<p>You should run this command as often as possible. You might even want to consider setting up a cron job for this purpose.</p>
+
+<h2>
+<a id="how-to-use-it" class="anchor" href="#how-to-use-it" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>How to use it</h2>
+
+<p>The first step require the Composer autoloader:</p>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-pse">&lt;?php</span><span class="pl-s1"></span>
+<span class="pl-s1"></span>
+<span class="pl-s1">    <span class="pl-k">require</span> <span class="pl-s"><span class="pl-pds">'</span>vendor/autoload.php<span class="pl-pds">'</span></span>;</span></pre></div>
+
+<p>The second step is to create a new <code>WhichBrowser\Parser</code> object. This object will contain all the information the library could find about the browser. The object has a required parameter, either the headers send by the browser, or a useragent string. Using the headers is preferable, because it will allow a better detection, but if you have just the useragent string, this will also work.</p>
+
+<p>For example:</p>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-smi">$result</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-c1">WhichBrowser\</span><span class="pl-c1">Parser</span>(<span class="pl-c1">getallheaders</span>());</span></pre></div>
+
+<p>or:</p>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-smi">$result</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-c1">WhichBrowser\</span><span class="pl-c1">Parser</span>(<span class="pl-smi">$_SERVER</span>[<span class="pl-s"><span class="pl-pds">'</span>HTTP_USER_AGENT<span class="pl-pds">'</span></span>]);</span></pre></div>
+
+<p>The variable <code>$result</code> now contains an object which you can query for information. There are various ways to access the information.</p>
+
+<p>First of all, you can call to <code>toString()</code> function to get a human readable identification:</p>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-s"><span class="pl-pds">"</span>You are using <span class="pl-pds">"</span></span> <span class="pl-k">.</span> <span class="pl-smi">$result</span><span class="pl-k">-&gt;</span>toString();</span>
+<span class="pl-s1"><span class="pl-c">// You are using Chrome 27 on OS X Mountain Lion 10.8</span></span></pre></div>
+
+<p>Another possiblity is to query the object:</p>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-smi">$result</span><span class="pl-k">-&gt;</span>isType(<span class="pl-s"><span class="pl-pds">'</span>desktop<span class="pl-pds">'</span></span>);</span>
+<span class="pl-s1"><span class="pl-c">// true</span></span>
+<span class="pl-s1"></span>
+<span class="pl-s1"><span class="pl-smi">$result</span><span class="pl-k">-&gt;</span>isType(<span class="pl-s"><span class="pl-pds">'</span>mobile<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>tablet<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>media<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>gaming:portable<span class="pl-pds">'</span></span>);</span>
+<span class="pl-s1"><span class="pl-c">// false</span></span>
+<span class="pl-s1"></span>
+<span class="pl-s1"><span class="pl-smi">$result</span><span class="pl-k">-&gt;</span>isBrowser(<span class="pl-s"><span class="pl-pds">'</span>Maxthon<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>&lt;<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>4.0.5<span class="pl-pds">'</span></span>);</span>
+<span class="pl-s1"><span class="pl-c">// false</span></span>
+<span class="pl-s1"></span>
+<span class="pl-s1"><span class="pl-smi">$result</span><span class="pl-k">-&gt;</span>isOs(<span class="pl-s"><span class="pl-pds">'</span>iOS<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>&gt;=<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>8<span class="pl-pds">'</span></span>);</span>
+<span class="pl-s1"><span class="pl-c">// false</span></span>
+<span class="pl-s1"></span>
+<span class="pl-s1"><span class="pl-smi">$result</span><span class="pl-k">-&gt;</span>isOs(<span class="pl-s"><span class="pl-pds">'</span>OS X<span class="pl-pds">'</span></span>);</span>
+<span class="pl-s1"><span class="pl-c">// true</span></span>
+<span class="pl-s1"></span>
+<span class="pl-s1"><span class="pl-smi">$result</span><span class="pl-k">-&gt;</span>isEngine(<span class="pl-s"><span class="pl-pds">'</span>Blink<span class="pl-pds">'</span></span>);</span>
+<span class="pl-s1"><span class="pl-c">// true</span></span></pre></div>
+
+<p>You can also access these properties directly:</p>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-smi">$result</span><span class="pl-k">-&gt;</span><span class="pl-smi">browser</span><span class="pl-k">-&gt;</span>toString();</span>
+<span class="pl-s1"><span class="pl-c">// Chrome 27  </span></span>
+<span class="pl-s1"></span>
+<span class="pl-s1"><span class="pl-smi">$result</span><span class="pl-k">-&gt;</span><span class="pl-smi">engine</span><span class="pl-k">-&gt;</span>toString();</span>
+<span class="pl-s1"><span class="pl-c">// Blink</span></span>
+<span class="pl-s1"></span>
+<span class="pl-s1"><span class="pl-smi">$result</span><span class="pl-k">-&gt;</span><span class="pl-smi">os</span><span class="pl-k">-&gt;</span>toString();</span>
+<span class="pl-s1"><span class="pl-c">// OS X Mountain Lion 10.8</span></span></pre></div>
+
+<p>Or access parts of these properties directly:</p>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-smi">$result</span><span class="pl-k">-&gt;</span><span class="pl-smi">browser</span><span class="pl-k">-&gt;</span><span class="pl-smi">name</span>;</span>
+<span class="pl-s1"><span class="pl-c">// Chrome</span></span>
+<span class="pl-s1"></span>
+<span class="pl-s1"><span class="pl-smi">$result</span><span class="pl-k">-&gt;</span><span class="pl-smi">browser</span><span class="pl-k">-&gt;</span><span class="pl-smi">name</span> <span class="pl-k">.</span> <span class="pl-s"><span class="pl-pds">'</span> <span class="pl-pds">'</span></span> <span class="pl-k">.</span> <span class="pl-smi">$result</span><span class="pl-k">-&gt;</span><span class="pl-smi">browser</span><span class="pl-k">-&gt;</span><span class="pl-smi">version</span><span class="pl-k">.</span>toString();</span>
+<span class="pl-s1"><span class="pl-c">// Chrome 27</span></span>
+<span class="pl-s1"></span>
+<span class="pl-s1"><span class="pl-smi">$result</span><span class="pl-k">-&gt;</span><span class="pl-smi">browser</span><span class="pl-k">-&gt;</span><span class="pl-smi">version</span><span class="pl-k">-&gt;</span><span class="pl-smi">value</span>;</span>
+<span class="pl-s1"><span class="pl-c">// 27.0.1453.110</span></span>
+<span class="pl-s1"></span>
+<span class="pl-s1"><span class="pl-smi">$result</span><span class="pl-k">-&gt;</span><span class="pl-smi">engine</span><span class="pl-k">-&gt;</span><span class="pl-smi">name</span>;</span>
+<span class="pl-s1"><span class="pl-c">// Blink</span></span></pre></div>
+
+<p>Finally you can also query versions directly:</p>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-smi">$result</span><span class="pl-k">-&gt;</span><span class="pl-smi">browser</span><span class="pl-k">-&gt;</span><span class="pl-smi">version</span><span class="pl-k">-&gt;</span>is(<span class="pl-s"><span class="pl-pds">'</span>&gt;<span class="pl-pds">'</span></span>, <span class="pl-c1">26</span>);</span>
+<span class="pl-s1"><span class="pl-c">// true</span></span>
+<span class="pl-s1"></span>
+<span class="pl-s1"><span class="pl-smi">$result</span><span class="pl-k">-&gt;</span><span class="pl-smi">os</span><span class="pl-k">-&gt;</span><span class="pl-smi">version</span><span class="pl-k">-&gt;</span>is(<span class="pl-s"><span class="pl-pds">'</span>&lt;<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>10.7.4<span class="pl-pds">'</span></span>);</span>
+<span class="pl-s1"><span class="pl-c">// false</span></span></pre></div>
+
+<h2>
+<a id="options" class="anchor" href="#options" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Options</h2>
+
+<p>It is possible to set additional options by passing an array as the second parameter when creating the <code>Parser</code> object.</p>
+
+<h3>
+<a id="disabling-detection-of-bots" class="anchor" href="#disabling-detection-of-bots" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Disabling detection of bots</h3>
+
+<p>In some cases you may want to disable the detection of bots. This allows the bot the deliberately fool WhichBrowser, so you can pick up the identity of useragent what the bot tries to mimic. This is especially handy when you want to use WhichBrowser to switch between different variants of your website and want to make sure crawlers see the right variant of the website. For example, a bot that mimics a mobile device will see the mobile variant of you site.</p>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-smi">$result</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-c1">WhichBrowser\</span><span class="pl-c1">Parser</span>(<span class="pl-c1">getallheaders</span>(), [ <span class="pl-s"><span class="pl-pds">'</span>detectBots<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-c1">false</span> ]);</span></pre></div>
+
+<h2>
+<a id="enable-result-caching" class="anchor" href="#enable-result-caching" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Enable result caching</h2>
+
+<p>WhichBrowser supports PSR-6 compatible cache adapters for caching results between requests. Using a cache is especially useful if you use WhichBrowser on every page of your website and a user visits multiple pages. During the first visit the headers will be parsed and the result will be cached. Upon further visits, the cached results will be used, which is much faster than having to parse the headers again and again.</p>
+
+<p>There are adapters available for other types of caches, such as APC, Doctrine, Memcached, MongoDB, Redis and many more. The configuration of these adapters all differ from each other, but once configured, all you have to do is pass it as an option when creating the <code>Parser</code> object, or use the <code>setCache()</code> function to set it afterwards. WhichBrowser has been tested to work with the adapters provided by <a href="http://php-cache.readthedocs.org/en/latest/">PHP Cache</a>. For a list of other packages that provide adapters see <a href="https://packagist.org/providers/psr/cache-implementation">Packagist</a>.</p>
+
+<p>For example, if you want to enable a memcached based cache you need to install an extra composer package:</p>
+
+<pre><code>composer require cache/memcached-adapter
+</code></pre>
+
+<p>And change the call to WhichBrowser/Parser as follows:</p>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-smi">$client</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-c1">\Memcached</span>();</span>
+<span class="pl-s1"><span class="pl-smi">$client</span><span class="pl-k">-&gt;</span>addServer(<span class="pl-s"><span class="pl-pds">'</span>localhost<span class="pl-pds">'</span></span>, <span class="pl-c1">11211</span>);</span>
+<span class="pl-s1"></span>
+<span class="pl-s1"><span class="pl-smi">$pool</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-c1">\Cache\Adapter\Memcached\</span><span class="pl-c1">MemcachedCachePool</span>(<span class="pl-smi">$client</span>);</span>
+<span class="pl-s1"></span>
+<span class="pl-s1"><span class="pl-smi">$result</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-c1">WhichBrowser\</span><span class="pl-c1">Parser</span>(<span class="pl-c1">getallheaders</span>(), [ <span class="pl-s"><span class="pl-pds">'</span>cache<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-smi">$pool</span> ]);</span></pre></div>
+
+<p>or</p>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-smi">$client</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-c1">\Memcached</span>();</span>
+<span class="pl-s1"><span class="pl-smi">$client</span><span class="pl-k">-&gt;</span>addServer(<span class="pl-s"><span class="pl-pds">'</span>localhost<span class="pl-pds">'</span></span>, <span class="pl-c1">11211</span>);</span>
+<span class="pl-s1"></span>
+<span class="pl-s1"><span class="pl-smi">$pool</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-c1">\Cache\Adapter\Memcached\</span><span class="pl-c1">MemcachedCachePool</span>(<span class="pl-smi">$client</span>);</span>
+<span class="pl-s1"></span>
+<span class="pl-s1"><span class="pl-smi">$result</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-c1">WhichBrowser\</span><span class="pl-c1">Parser</span>();</span>
+<span class="pl-s1"><span class="pl-smi">$result</span><span class="pl-k">-&gt;</span>setCache(<span class="pl-smi">$pool</span>);</span>
+<span class="pl-s1"><span class="pl-smi">$result</span><span class="pl-k">-&gt;</span>analyse(<span class="pl-c1">getallheaders</span>());</span></pre></div>
+
+<p>You can also specify after how many seconds a cached result should be discarded. The default value is 900 seconds or 15 minutes. If you think WhichBrowser uses too much memory for caching, you should lower this value. You can do this by setting the <code>cacheExpires</code> option or passing it as a second parameter to the <code>setCache()</code> function.</p>
+
+<h2>
+<a id="api-reference" class="anchor" href="#api-reference" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>API reference</h2>
+
+<h3>
+<a id="the-parser-object" class="anchor" href="#the-parser-object" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>The Parser object</h3>
+
+<p>After a new <code>WhichBrowser\Parser</code> object is created, it contains a number of properties and functions. All of these properties are guaranteed to be present.</p>
+
+<p><strong>Properties:</strong></p>
+
+<ul>
+<li>
+<code>browser</code><br>
+an object that contains information about the browser itself</li>
+<li>
+<code>engine</code><br>
+an object that contains information about the rendering engine</li>
+<li>
+<code>os</code><br>
+an object that contains information about the operating system</li>
+<li>
+<code>device</code><br>
+an object that contains information about the device</li>
+</ul>
+
+<p><strong>Functions:</strong></p>
+
+<p><code>getType()</code><br>
+Returns the <code>type</code> and <code>subtype</code> property of the <code>device</code> object. If a subtype is present it is concatenated to the type and seperated by a semicolor, for example: <code>mobile:smart</code> or <code>gaming:portable</code>. If the subtype is not applicable, it just return the type, for example: <code>desktop</code> or <code>ereader</code>.</p>
+
+<p><code>isType($type [,$type [,$type [,$type]]])</code><br>
+If a single argument is used, the function returns <code>true</code> if the argument matches the <code>type</code> propery of <code>device</code> object. The argument can optionally also provide a subtype by concatenating it to the type and seperating it with a semicolon. It can use multiple arguments in which case the function returns <code>true</code> if one of the arguments matches. If none of the arguments matches, it returns <code>false</code></p>
+
+<p><code>isMobile()</code><br>
+Return <code>true</code> if the browser is a mobile device, like a phone, tablet, ereader, camera, portable media player, watch or portable gaming console. Otherwise it returns <code>false</code>.</p>
+
+<p><code>isBrowser($name [, $comparison, $version])</code><br>
+Is used to query the <code>name</code> and <code>version</code> property of the <code>browser</code> object. The funcion can contain a single argument to a simple comparison based on <code>name</code>, or three arguments to compare both <code>name</code> and <code>version</code>. The first argument always contains the name of the browser. The second arguments is a string that can container either <code>&lt;</code>, <code>&lt;=</code>, <code>=</code>, <code>=&gt;</code> or <code>&gt;</code>. The third is an integer, float or string that contains the version. You can use versions like <code>10</code>, <code>10.7</code> or <code>'10.7.4'</code>. For more information about how version comparisons are performed, please see the <code>is()</code> function of the <code>Version</code> object.</p>
+
+<p><code>isEngine($name [, $comparison, $version])</code><br>
+Is used to query the <code>name</code> and <code>version</code> property of the <code>engine</code> object. This function works in exactly the same way as <code>isBrowser</code>.</p>
+
+<p><code>isOs($name [, $comparison, $version])</code><br>
+Is used to query the <code>name</code> and <code>version</code> property of the <code>os</code> object. This function works in exactly the same way as <code>isBrowser</code>.</p>
+
+<p><code>isDetected()</code><br>
+Is there actually some browser detected, for did we fail to detect anything?</p>
+
+<p><code>toString()</code><br>
+Get a human readable representation of the detected browser, including operating system and device information.</p>
+
+<h3>
+<a id="the-browser-object" class="anchor" href="#the-browser-object" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>The browser object</h3>
+
+<p>An object of the <code>WhichBrowser\Model\Browser</code> class is used for the <code>browser</code> property of the main <code>WhichBrowser\Parser</code> object and contains a number of properties. If a property is not applicable in this situation it will be null or undefined.</p>
+
+<p><strong>Properties:</strong></p>
+
+<ul>
+<li>
+<code>name</code><br>
+a string containing the name of the browser</li>
+<li>
+<code>alias</code><br>
+a string containing an alternative name of the browser</li>
+<li>
+<code>version</code><br>
+a version object containing information about the version of the browser</li>
+<li>
+<code>stock</code><br>
+a boolean, true if the browser is the default browser of the operating system, false otherwise</li>
+<li>
+<code>channel</code><br>
+a string containing the distribution channel, ie. 'Nightly' or 'Next'.</li>
+<li>
+<code>mode</code><br>
+a string that can contain the operating mode of the browser, ie. 'proxy'.</li>
+<li>
+<code>hidden</code><br>
+a boolean that is true if the browser does not have a name and is the default of the operating system.</li>
+<li>
+<code>family</code><br>
+an object that contains information about to which family this browser belongs</li>
+<li>
+<code>using</code><br>
+an object that contains information about to which kind of webview this browser uses</li>
+</ul>
+
+<p><strong>Functions:</strong></p>
+
+<p><code>isFamily($name)</code><br>
+Does the family of this browser have this name, or does the browser itself have this name.</p>
+
+<p><code>isUsing($name)</code><br>
+Is the browser using a webview using with the provided name.</p>
+
+<p><code>getName()</code><br>
+Get the name of the browser</p>
+
+<p><code>getVersion()</code><br>
+Get the version of the browser</p>
+
+<p><code>toString()</code><br>
+Get a human readable representation of the detected browser</p>
+
+<h3>
+<a id="the-engine-object" class="anchor" href="#the-engine-object" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>The engine object</h3>
+
+<p>An object of the <code>WhichBrowser\Model\Engine</code> class is used for the <code>engine</code> property of the main <code>WhichBrowser\Parser</code> object and contains a number of properties. If a property is not applicable in this situation it will be null or undefined.</p>
+
+<p><strong>Properties:</strong></p>
+
+<ul>
+<li>
+<code>name</code><br>
+a string containing the name of the rendering engine</li>
+<li>
+<code>version</code><br>
+a version object containing information about the version of the rendering engine</li>
+</ul>
+
+<p><strong>Functions:</strong></p>
+
+<p><code>getName()</code><br>
+Get the name of the rendering engine</p>
+
+<p><code>getVersion()</code><br>
+Get the version of the rendering engine</p>
+
+<p><code>toString()</code><br>
+Get a human readable representation of the detected rendering engine</p>
+
+<h3>
+<a id="the-os-object" class="anchor" href="#the-os-object" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>The os object</h3>
+
+<p>An object of the <code>WhichBrowser\Model\Os</code> class is used for the <code>os</code> property of the main <code>WhichBrowser\Parser</code> object and contains a number of properties. If a property is not applicable in this situation it will be null or undefined.</p>
+
+<p><strong>Properties:</strong></p>
+
+<ul>
+<li>
+<code>name</code><br>
+a string containing the name of the operating system</li>
+<li>
+<code>version</code><br>
+a version object containing information about the version of the operating system</li>
+<li>
+<code>family</code><br>
+an object that contains information about to which family this operating system belongs</li>
+</ul>
+
+<p><strong>Functions:</strong></p>
+
+<p><code>isFamily($name)</code><br>
+Does the family of this operating system have this name, or does the operating system itself have this name.</p>
+
+<p><code>getName()</code><br>
+Get the name of the operating system</p>
+
+<p><code>getVersion()</code><br>
+Get the version of the operating system</p>
+
+<p><code>toString()</code><br>
+Get a human readable representation of the detected operating system</p>
+
+<h3>
+<a id="the-device-object" class="anchor" href="#the-device-object" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>The device object</h3>
+
+<p>An object of the <code>WhichBrowser\Model\Device</code> class is used for the <code>device</code> property of the main <code>WhichBrowser\Parser</code> object and contains a number of properties. If a property is not applicable in this situation it will be null or undefined.</p>
+
+<p><strong>Properties:</strong></p>
+
+<ul>
+<li>
+<code>type</code><br>
+a string containing the type of the browser.</li>
+<li>
+<code>subtype</code><br>
+a string containing the subtype of the browser.</li>
+<li>
+<code>identified</code><br>
+a boolean that is true if the device has been positively identified.</li>
+<li>
+<code>manufacturer</code><br>
+a string containing the manufacturer of the device, ie. 'Apple' or 'Samsung'.</li>
+<li>
+<code>model</code><br>
+as string containing the model of the device, ie. 'iPhone' or 'Galaxy S4'.</li>
+</ul>
+
+<p>The <code>type</code> property can contain any value from the following list:</p>
+
+<ul>
+<li>desktop</li>
+<li>mobile</li>
+<li>tablet</li>
+<li>gaming</li>
+<li>headset</li>
+<li>ereader</li>
+<li>media</li>
+<li>emulator</li>
+<li>television</li>
+<li>monitor</li>
+<li>camera</li>
+<li>signage</li>
+<li>whiteboard</li>
+<li>car</li>
+<li>pos</li>
+<li>bot</li>
+</ul>
+
+<p>If the <code>type</code> is "mobile", the <code>subtype</code> property can contain any value from the following list:</p>
+
+<ul>
+<li>feature</li>
+<li>smart</li>
+</ul>
+
+<p>If the <code>type</code> is "gaming", the <code>subtype</code> property can contain any value from the following list:</p>
+
+<ul>
+<li>console</li>
+<li>portable</li>
+</ul>
+
+<p><strong>Functions:</strong></p>
+
+<p><code>getManufacturer()</code><br>
+Get the name of the manufacturer</p>
+
+<p><code>getModel()</code><br>
+Get the name of the model</p>
+
+<p><code>toString()</code><br>
+Get a human readable representation of the detected device</p>
+
+<h3>
+<a id="the-family-object" class="anchor" href="#the-family-object" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>The family object</h3>
+
+<p>An object of the <code>WhichBrowser\Model\Family</code> class is used for the <code>family</code> property of the <code>WhichBrowser\Model\Browser</code> and <code>WhichBrowser\Model\Os</code> object and contains a number of properties. If a property is not applicable in this situation it will be null or undefined.</p>
+
+<p><strong>Properties:</strong></p>
+
+<ul>
+<li>
+<code>name</code><br>
+a string containing the name of the family</li>
+<li>
+<code>version</code><br>
+a version object containing information about the version of the family</li>
+</ul>
+
+<p><strong>Functions:</strong></p>
+
+<p><code>getName()</code><br>
+Get the name of the family</p>
+
+<p><code>getVersion()</code><br>
+Get the version of the family</p>
+
+<p><code>toString()</code><br>
+Get a human readable representation of the family</p>
+
+<h3>
+<a id="the-using-object" class="anchor" href="#the-using-object" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>The using object</h3>
+
+<p>An object of the <code>WhichBrowser\Model\Using</code> class is used for the <code>using</code> property of the <code>WhichBrowser\Model\Browser</code> object and contains a number of properties. If a property is not applicable in this situation it will be null or undefined.</p>
+
+<p><strong>Properties:</strong></p>
+
+<ul>
+<li>
+<code>name</code><br>
+a string containing the name of the webview</li>
+<li>
+<code>version</code><br>
+a version object containing information about the version of the webview</li>
+</ul>
+
+<p><strong>Functions:</strong></p>
+
+<p><code>getName()</code><br>
+Get the name of the webview</p>
+
+<p><code>getVersion()</code><br>
+Get the version of the webview</p>
+
+<p><code>toString()</code><br>
+Get a human readable representation of the webview</p>
+
+<h3>
+<a id="the-version-object" class="anchor" href="#the-version-object" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>The version object</h3>
+
+<p>An object of the <code>WhichBrowser\Model\Version</code> class is used for the <code>version</code> property of the <code>browser</code>, <code>engine</code> and <code>os</code> object and contains a number of properties and functions. If a property is not applicable in this situation it will be null or undefined.</p>
+
+<p><strong>Properties:</strong></p>
+
+<ul>
+<li>
+<code>value</code><br>
+a string containing the original version number.</li>
+<li>
+<code>alias</code><br>
+a string containing an alias for the version number, ie. 'XP' for Windows '5.1'.</li>
+<li>
+<code>details</code><br>
+an integer containing the number of digits of the version number that should be printed.</li>
+</ul>
+
+<p><strong>Functions:</strong></p>
+
+<p><code>is($version)</code> or <code>is($comparison, $version)</code><br>
+Using this function it is easy to compare a version to another version. If you specify only one argument, this function will return if the versions are the same. You can also specify two arguments, in that case the first argument contains the comparison operator, such as <code>&lt;</code>, <code>&lt;=</code>, <code>=</code>, <code>=&gt;</code> or <code>&gt;</code>. The second argument is the version you want to compare it to. You can use versions like <code>10</code>, <code>10.7</code> or <code>'10.7.4'</code>, but be aware that <code>10</code> is not the same as <code>10.0</code>. For example if our OS version is <code>10.7.4</code>:</p>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-smi">$result</span><span class="pl-k">-&gt;</span><span class="pl-smi">os</span><span class="pl-k">-&gt;</span><span class="pl-smi">version</span><span class="pl-k">-&gt;</span>is(<span class="pl-s"><span class="pl-pds">'</span>10.7.4<span class="pl-pds">'</span></span>);</span>
+<span class="pl-s1"><span class="pl-c">// true</span></span>
+<span class="pl-s1"></span>
+<span class="pl-s1"><span class="pl-smi">$result</span><span class="pl-k">-&gt;</span><span class="pl-smi">os</span><span class="pl-k">-&gt;</span><span class="pl-smi">version</span><span class="pl-k">-&gt;</span>is(<span class="pl-s"><span class="pl-pds">'</span>10.7<span class="pl-pds">'</span></span>);</span>
+<span class="pl-s1"><span class="pl-c">// true</span></span>
+<span class="pl-s1"></span>
+<span class="pl-s1"><span class="pl-smi">$result</span><span class="pl-k">-&gt;</span><span class="pl-smi">os</span><span class="pl-k">-&gt;</span><span class="pl-smi">version</span><span class="pl-k">-&gt;</span>is(<span class="pl-s"><span class="pl-pds">'</span>10<span class="pl-pds">'</span></span>);</span>
+<span class="pl-s1"><span class="pl-c">// true</span></span>
+<span class="pl-s1"></span>
+<span class="pl-s1"><span class="pl-smi">$result</span><span class="pl-k">-&gt;</span><span class="pl-smi">os</span><span class="pl-k">-&gt;</span><span class="pl-smi">version</span><span class="pl-k">-&gt;</span>is(<span class="pl-s"><span class="pl-pds">'</span>10.0<span class="pl-pds">'</span></span>);</span>
+<span class="pl-s1"><span class="pl-c">// false</span></span>
+<span class="pl-s1"></span>
+<span class="pl-s1"><span class="pl-smi">$result</span><span class="pl-k">-&gt;</span><span class="pl-smi">os</span><span class="pl-k">-&gt;</span><span class="pl-smi">version</span><span class="pl-k">-&gt;</span>is(<span class="pl-s"><span class="pl-pds">'</span>&gt;<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>10<span class="pl-pds">'</span></span>);</span>
+<span class="pl-s1"><span class="pl-c">// false</span></span>
+<span class="pl-s1"></span>
+<span class="pl-s1"><span class="pl-smi">$result</span><span class="pl-k">-&gt;</span><span class="pl-smi">os</span><span class="pl-k">-&gt;</span><span class="pl-smi">version</span><span class="pl-k">-&gt;</span>is(<span class="pl-s"><span class="pl-pds">'</span>&gt;<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>10.7<span class="pl-pds">'</span></span>);</span>
+<span class="pl-s1"><span class="pl-c">// false</span></span>
+<span class="pl-s1"></span>
+<span class="pl-s1"><span class="pl-smi">$result</span><span class="pl-k">-&gt;</span><span class="pl-smi">os</span><span class="pl-k">-&gt;</span><span class="pl-smi">version</span><span class="pl-k">-&gt;</span>is(<span class="pl-s"><span class="pl-pds">'</span>&gt;<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>10.7.3<span class="pl-pds">'</span></span>);</span>
+<span class="pl-s1"><span class="pl-c">// true</span></span></pre></div>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/YOTOV-LIMITED/Parser">Parser</a> is maintained by <a href="https://github.com/YOTOV-LIMITED">YOTOV-LIMITED</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
